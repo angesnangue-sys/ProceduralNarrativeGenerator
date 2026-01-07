@@ -95,3 +95,4 @@ void StoryGenerator::saveToFile(const std::string& text) {
         file.close();
     }
 }
+ 
