@@ -1,49 +1,96 @@
-#include "App.h"
-#include <iostream>
+#include "includes/App.h"
+#include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_sdlrenderer3.h>
+
 
 
 App::App()
-{
-    mIsRunning = true;
+    : IsRunning(true), window(nullptr), renderer(nullptr), selectedTheme(0){
+        SDL_Init(SDL_INIT_VIDEO);
+
+        window = SDL_CreateWindow(
+            "Procedural Narrative Generator",
+            800, 600,
+            SDL_WINDOW_RESIZABLE
+        );
+
+        renderer = SDL_CreateRenderer(window, nullptr);
+        
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGui::StyleColorsDark();
+
+        ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+        ImGui_ImplSDLRenderer3_Init(renderer);
+    }
+
+App::~App(){
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }
 
-void App::Run()
-{
-    while (mIsRunning)
+void App::run(){
+    while (isRunning)
     {
-        showmenu();
+        processEvents();
 
-        int choice;
-        std::cin >> choice;
-        std::cin.ignore();
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
 
-        handlechoice(choice);
+        renderUI();
+
+        ImGui::Render();
+        SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
+        SDL_RenderClear(renderer);
+
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());
+        SDL_RenderPresent(renderer);
     }
 }
 
-void App::showmenu()
-{
-    std::cout << "\n=== MENU PRINCIPAL ===\n";
-    std::cout << "1 - Generer une histoire\n";
-    std::cout << "2 - Quitter\n";
-    std::cout << "Votre choix : ";
+void App::processEvents() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        ImGui_ImplSDL3_ProcessEvent(&event);
+        if (event.type == SDL_EVENT_QUIT){
+            IsRunning = false;
+        }
+    }
 }
 
-void App::handlechoice(int choice)
-{
-    std::string element;
-        switch (choice)
-        {
-            case 1:
-                std::cout << "Histoire : \n";
-                std::cout << generator.Generateparagraph() << std::endl;
-                break;
-            case 2:
-              mIsRunning = false;
-              break;
-            
-            default:
-                std::cout << "Choix invalide. \n";
-                break; 
+void App::renderUI(){
+    ImGui::Begin("Generateur d'histoires");
+
+    const char* themes[] = {
+        "Feerrique",
+        "Medieval",
+        "Vampire"
+    };
+
+    ImGui::Combo("Theme", &selectedTheme, themes, 3);
+
+    if (ImGui::Button("Generer l'histoire")) {
+        Theme theme = static_cast<Theme>(selectedTheme);
+        Story story = engine.generateStory(theme);
+        storyText = story.toString();
     }
+
+    ImGui::Separator();
+
+    ImGui::InputTextMultiline(
+        "Histoire",
+        storyText.data(),
+        storyText.capacity() + 1,
+        imvec2(-1, 300),
+        ImGuiInputTextFlags_ReadOnly
+    );
+
+    ImGui::End();
 }

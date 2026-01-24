@@ -1,5 +1,5 @@
-// cree l'application et lance l'application
-# include "App.h"
+# include <iostream>
+#include "App.h"
 
 int main ()
 {
