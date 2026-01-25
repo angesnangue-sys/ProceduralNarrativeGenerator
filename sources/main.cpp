@@ -1,9 +1,8 @@
-# include <iostream>
-#include "App.h"
+#include "includes/App.h"
 
 int main ()
 {
-    App app;
-    app.Run();
-    return 0; 
+    App app(); //creation de l'application
+    app.Run(); //lancement de la boucle principale
+    return 0;
 } 

@@ -4,11 +4,12 @@
 #include <vector>
 #include <string>
 
+//  suite de paragraphes qui constituent l'histoire
 struct Story
 {
     std::vector<std::string> paragraphs;
 
-    std::string toString() const;
+    std::string toString() const;//concatene les paragraphes en un seul texte 
 };
 
 #endif

@@ -1,8 +1,9 @@
 #ifndef THEME_H
 #define THEME_H
 
+//l'enumeration des themes possibles
 enum class Theme {
-    FEERIQUE,
+    FEERIQUE = 1,
     MEDIEVAL,
     VAMPIRE
 };

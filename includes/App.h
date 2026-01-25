@@ -10,22 +10,18 @@ class App
 public:
     App();
     ~App();
-
     void Run();
 
 private:
-    void processEvents();
-    void renderUI();
-
-    bool mIsRunning;
+    void handleEvents();
+    void render();
 
     SDL_Window* window;
     SDL_Renderer* renderer;
+    bool running;
 
     NarrativeEngine engine;
-
-    int selectedTheme;
-    std::string storyText;
+    std::string StoryText;
 };
 
 #endif

@@ -1,107 +1,104 @@
-#include "NarrativeEngine.h"
+#include "includes/NarrativeEngine.h"
+#include "includes/Story.h"
+#include "includes/Character.h"
+#include "includes/Theme.h"
+#include "includes/ThemeData.h"
+
 #include <cstdlib>
 #include <ctime>
 
-NarrativeEngine::NarrativeEngine() {
-    srand(static_cast<unsigned>(time(nullptr)));
-
-    ThemeData fairy;
-
-    fairy.names = {
-        "la foret sacree",
-        "l'arbre des fees",
-        "le lac enchante"
-    };
-
-    fairy.weapons = {
-        "baguette magique",
-        "poussiere de fee",
-        "baton lumineux"
-    };
-
-    fairy.events = {
-        "un esprit ancien se reveilla",
-        "une ombre corrompue apparut",
-        "un sort interdit fut brise"
-    };
-
-    fairy.introTemplates = {
-        "{NAME} vivait paisiblement a {LOCATION}.",
-        "{NAME}, armee de sa {WEAPON}, explorait {LOCATION}."
-    };
-
-    fairy.eventTemplates = {
-        "un jour, {EVENT}."
-        "{NAME} utilisa sa {WEAPON} pour faire face au danger.",
-        "le chaos s'etendit dans {LOCATION}."
-    };
-
-    fairy.conclusionTemplates = {
-        "finalement, {NAME} retablit l'equilibre.",
-        "{NAME} quitta {LOCATION}, trandformee par cette aventure."
-    };
-
-    database[Theme::FEERIQUE] = fairy;
-}
-
-const std::string& NarrativeEngine::randomFrom(const std::vector<std::string>& v) {
+//fonction utilitaire pour choisir un element aleatoire
+static std::string pickRandom(const std::vector<std::string>& v)
+{
     return v[rand() % v.size()];
 }
 
-Character NarrativeEngine::createCharacter(theme theme) {
-    ThemeData& data = database[theme];
+std::string NarrativeEngine::generateStory(Theme theme) 
+{
+    srand(static_cast<unsigned>(time(nullptr)));
 
-    Character c;
-    c.theme = theme;
-    c.name = randomFrom(data.names);
-    c.location = randomFrom(data.loctaions);
-    c.weapon = randomFrom(data.weapons);
+    ThemeData data;
+    //chargement des donnees selon le theme
 
-    return c;
-}
+    if (theme == Theme::FEERIQUE)
+    {
+        data.names = {
+            "Luna",
+            "Eliora",
+            "Faen"
+        };
 
-std::string NarrativeEngine::applyTemplate(
-    std::string tpl,
-    const Character& c,
-    const std::string& event
-) {
-    auto replace = [&](const std::string& key, const std::string& value){
-        size_t pos;
-        while ((pos = tpl.find(key)) != std::string::npos) {
-            tpl.replace(pos, key.length(), value);
-        }
-    };
+        data.locations = {
+            "la foret sacree",
+            "l'arbre des fees",
+            "le lac enchante"
+        };
 
-    replace("{NAME}", c.name);
-    replace("{LOCATION}", c.location);
-    replace("{WEAPON}", c.weapon);
-    replace{"{EVENT}", event};
+        data.weapons = {
+            "baguette magique",
+            "poussiere de fee",
+            "baton lumineux"
+        };
 
-    return tpl;
-}
+        data.events = {
+            "un esprit ancien se reveilla",
+            "une ombre corrompue apparut",
+            "un sort interdit fut brise"
+        };
 
-Story NarrativeEngine::generateStory(Theme theme){
-    Story story;
-    ThemeData& data = database[theme];
+        data.introTemplates = {
+            "{NAME} vivait paisiblement a {LOCATION}.",
+            "{NAME}, armee de sa {WEAPON}, explorait {LOCATION}."
+        };
 
-    Character c = createCharacter(theme);
-    
-    story.paragraphs.push_back(
-        applyTemplate(randomFrom(data.introTemplates), c, "")
-    );
+        data.eventTemplates = {
+            "un jour, {EVENT}."
+            "{NAME} utilisa sa {WEAPON} pour faire face au danger.",
+            "le chaos s'etendit dans {LOCATION}."
+        };
 
-    for (int i = 0; i < 3; i++) {
-        story.paragraphs.push_back(applyTemplate(
-            randomFrom(data.eventTemplates),
-            c,
-            randomFrom(data.events)
-        )
-    );
+        data.conclusionTemplates = {
+            "finalement, {NAME} retablit l'equilibre.",
+            "{NAME} quitta {LOCATION}, trandformee par cette aventure."
+        };
     }
 
-    story.paragraphs.push_back(
-        applyTemplate(randomFrom(data.conclusionTemplates), c, "")
-    );
+    //creation du personnage
+        Character c;
+        c.name = pickRandom(data.names);
+        c.location = pickRandom(data.locations);
+        c.weapon = pickRandom(data.weapons);
+        c.theme = theme;
 
-    return story;
+        Story story;
+
+    //fonction de remplacement des mot-cles
+    auto replace = [&](std::string text)
+    {
+        size_t pos;
+        if ((pos = text.find("{NAME}")) != std::string::npos)
+        text.replace(pos, 6, c.name);
+
+        if ((pos = text.find("{LOCATION}")) != std::string::npos)
+        text.replace(pos, 10, c.location);
+
+        if ((pos = text.find("{WEAPON}")) != std::string::npos)
+        text.replace(pos, 8, c.weapon);
+
+        return text;
+    };
+
+    //introduction
+    story.paragraphs.push_back(replace(pickRandom(data.introTemplates)));
+
+    //peripeties
+    for (int i = 0; i <= 3; ++i)
+    {
+        story.paragraphs.push_back(replace(pickRandom(data.eventTemplates)));
+    }
+
+    //conclusion
+    story.paragraphs.push_back(replace(pickRandom(data.conclusionTemplates)));
+
+    return story.toString();
 }

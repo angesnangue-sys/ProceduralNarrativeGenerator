@@ -1,96 +1,70 @@
 #include "includes/App.h"
-#include <imgui.h>
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_sdlrenderer3.h>
-
 
 
 App::App()
-    : IsRunning(true), window(nullptr), renderer(nullptr), selectedTheme(0){
-        SDL_Init(SDL_INIT_VIDEO);
+{
+    SDL_Init(SDL_INIT_VIDEO);
 
-        window = SDL_CreateWindow(
-            "Procedural Narrative Generator",
-            800, 600,
-            SDL_WINDOW_RESIZABLE
-        );
+    window = SDL_CreateWindow(
+        "Story Generator",
+        800,
+        600,
+        SDL_WINDOW_RESIZABLE
+    );
 
-        renderer = SDL_CreateRenderer(window, nullptr);
-        
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGui::StyleColorsDark();
+    renderer = SDL_CreateRenderer(window, nullptr);
+    running = true;
 
-        ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-        ImGui_ImplSDLRenderer3_Init(renderer);
-    }
+    // generation initiale
+    StoryText = engine.generateStory(Theme::FEERIQUE);
+}
 
-App::~App(){
-    ImGui_ImplSDLRenderer3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
-
+App::~App()
+{
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
 
-void App::run(){
-    while (isRunning)
+void App::run()
+{
+    while (running)
     {
-        processEvents();
-
-        ImGui_ImplSDLRenderer3_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
-
-        renderUI();
-
-        ImGui::Render();
-        SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
-        SDL_RenderClear(renderer);
-
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());
-        SDL_RenderPresent(renderer);
+        handleEvents();
+        render();
     }
 }
 
-void App::processEvents() {
+void App::handleEvents()
+{
     SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        ImGui_ImplSDL3_ProcessEvent(&event);
-        if (event.type == SDL_EVENT_QUIT){
-            IsRunning = false;
+
+    while (SDL_PollEvent(&event))
+    {
+        if (event.type == SDL_EVENT_QUIT)
+            running = false;
+        
+        if (event.type == SDL_EVENT_KEY_DOWN)
+        {
+            if (event.key.keysym.sym == SDLK_SPACE)
+            {
+                //Generer une nouvelle histoire
+                StoryText = engine.generateStory(Theme::FEERIQUE);
+            }
         }
     }
 }
 
-void App::renderUI(){
-    ImGui::Begin("Generateur d'histoires");
-
-    const char* themes[] = {
-        "Feerrique",
-        "Medieval",
-        "Vampire"
-    };
-
-    ImGui::Combo("Theme", &selectedTheme, themes, 3);
-
-    if (ImGui::Button("Generer l'histoire")) {
-        Theme theme = static_cast<Theme>(selectedTheme);
-        Story story = engine.generateStory(theme);
-        storyText = story.toString();
-    }
-
-    ImGui::Separator();
-
-    ImGui::InputTextMultiline(
-        "Histoire",
-        storyText.data(),
-        storyText.capacity() + 1,
-        imvec2(-1, 300),
-        ImGuiInputTextFlags_ReadOnly
+void App::render()
+{
+    SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
+    SDL_RenderClear(renderer);
+    SDL_RenderDebugText(
+        renderer,
+        20,
+        20,
+        StoryText.c_str()
     );
 
-    ImGui::End();
+    SDL_RenderPresent(renderer);
 }
